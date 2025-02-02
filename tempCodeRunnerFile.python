@@ -1,0 +1,25 @@
+# Install RAPIDS
+!git clone https://github.com/rapidsai/rapidsai-csp-utils.git
+!bash rapidsai-csp-utils/colab/rapids-colab.sh stable
+
+import sys, os, shutil
+
+sys.path.append('/usr/local/lib/python3.7/site-packages/')
+os.environ['NUMBAPRO_NVVM'] = '/usr/local/cuda/nvvm/lib64/libnvvm.so'
+os.environ['NUMBAPRO_LIBDEVICE'] = '/usr/local/cuda/nvvm/libdevice/'
+os.environ["CONDA_PREFIX"] = "/usr/local"
+for so in ['cudf', 'rmm', 'nccl', 'cuml', 'cugraph', 'xgboost', 'cuspatial']:
+  fn = 'lib'+so+'.so'
+  source_fn = '/usr/local/lib/'+fn
+  dest_fn = '/usr/lib/'+fn
+  if os.path.exists(source_fn):
+    print(f'Copying {source_fn} to {dest_fn}')
+    shutil.copyfile(source_fn, dest_fn)
+# fix for BlazingSQL import issue
+# ImportError: /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by /usr/local/lib/python3.7/site-packages/../../libblazingsql-engine.so)
+if not os.path.exists('/usr/lib64'):
+    os.makedirs('/usr/lib64')
+for so_file in os.listdir('/usr/local/lib'):
+  if 'libstdc' in so_file:
+    shutil.copyfile('/usr/local/lib/'+so_file, '/usr/lib64/'+so_file)
+    shutil.copyfile('/usr/local/lib/'+so_file, '/usr/lib/x86_64-linux-gnu/'+so_file)
